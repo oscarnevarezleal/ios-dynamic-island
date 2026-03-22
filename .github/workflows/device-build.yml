@@ -1,0 +1,73 @@
+name: Device Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      configuration:
+        description: 'Build configuration'
+        required: true
+        default: 'Debug'
+        type: choice
+        options:
+          - Debug
+          - Release
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-for-device:
+    name: Build for Device
+    runs-on: macos-14
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
+      - name: Show build environment
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Build archive for device
+        run: |
+          xcodebuild archive \
+            -project DynamicIslandDemo.xcodeproj \
+            -scheme DynamicIslandDemo \
+            -destination 'generic/platform=iOS' \
+            -configuration ${{ inputs.configuration }} \
+            -archivePath build/DynamicIslandDemo.xcarchive \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            CODE_SIGN_ENTITLEMENTS="" \
+            | xcpretty && exit ${PIPESTATUS[0]}
+
+      - name: Export unsigned IPA
+        run: |
+          mkdir -p build/Payload
+          cp -r build/DynamicIslandDemo.xcarchive/Products/Applications/DynamicIslandDemo.app build/Payload/
+          cd build
+          zip -r DynamicIslandDemo-device.ipa Payload
+          echo "Built IPA at build/DynamicIslandDemo-device.ipa"
+          ls -lh DynamicIslandDemo-device.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DynamicIslandDemo-device-${{ inputs.configuration }}
+          path: build/DynamicIslandDemo-device.ipa
+          retention-days: 14
+
+      - name: Upload xcarchive artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DynamicIslandDemo-xcarchive-${{ inputs.configuration }}
+          path: build/DynamicIslandDemo.xcarchive
+          retention-days: 14
