@@ -26,7 +26,7 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = A50000010000000000000001;
 			proxyType = 1;
-			remoteGlobalIDString = A30000010000000000000002;
+			remoteGlobalIDString = A90000010000000000000002;
 			remoteInfo = DynamicIslandDemoWidgetExtension;
 		};
 /* End PBXContainerItemProxy section */
