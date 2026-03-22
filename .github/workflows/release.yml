@@ -66,9 +66,9 @@ jobs:
           path: ${{ env.artifact_name }}
 
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.tag }}
           name: DynamicIslandDemo ${{ steps.version.outputs.tag }}
           body: |
             ## DynamicIslandDemo ${{ steps.version.outputs.tag }}
