@@ -36,7 +36,22 @@ jobs:
             -scheme DynamicIslandDemo \
             -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
+            -derivedDataPath build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty && exit ${PIPESTATUS[0]}
+
+      - name: Package simulator app
+        run: |
+          APP_PATH=$(find build -name "DynamicIslandDemo.app" -type d | head -1)
+          echo "Found app at: $APP_PATH"
+          cd "$(dirname "$APP_PATH")"
+          zip -r "$GITHUB_WORKSPACE/DynamicIslandDemo-simulator.zip" DynamicIslandDemo.app
+
+      - name: Upload simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: DynamicIslandDemo-simulator
+          path: DynamicIslandDemo-simulator.zip
+          retention-days: 7
